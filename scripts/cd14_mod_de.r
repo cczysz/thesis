@@ -1,20 +1,19 @@
 library(affy)
 library(ggplot2)
-require(ggplot2)
 library(limma)
 #library(BiocInstaller)
 #biocLite("hugene10sttranscriptcluster.db")
-library(hugene10sttranscriptcluster.db)
+# library(hugene10sttranscriptcluster.db)
 
-wd = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14"
-setwd(wd)
+# wd = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14"
+setwd(files_dir)
 
 # Rdata file names
-raw_exp_rfile = "cd14_cau_raw.RData"
-norm_exp_rfile = "cd14_cau_expr.RData"
-probeinfofile = "/home/t.cczysz/HuGeneProbeInfo.csv"
-peer_factors_file = "cd14_cau_factors.txt"
-lm_peer_residuals_file = "cd14_factor_residuals.txt"
+# raw_exp_rfile = "cd14_cau_raw.RData"
+# norm_exp_rfile = "cd14_cau_expr.RData"
+# probeinfofile = "/home/t.cczysz/HuGeneProbeInfo.csv"
+# peer_factors_file = "cd14_cau_factors.txt"
+# lm_peer_residuals_file = "cd14_factor_residuals.txt"
 
 phen <- read.csv("CD14.Caucasian.txt",header=TRUE)
 
