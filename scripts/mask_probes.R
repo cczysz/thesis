@@ -8,19 +8,33 @@ probes_geneMapping <- read.table(file=paste(probe_dir,'probes.gencode.v22.exon.i
 
 probeIds <- probes_geneMapping[,1]
 
+numMultiMap <- probes_geneMapping[,2]
 multiMappingIdx <- probes_geneMapping[,2] - 1
 multiMappingIdx[multiMappingIdx > 0] <- 1
 
 probesOverlappingSnps <<- read.table(file='/home/t.cczysz/probes_SNP_overlap.txt',header=F,as.is=T)
 
-ProbeSNP <- function(probeID,probeIds){
-	idx <- grep(probeID,probesOverlappingSnps)
-	if (length(idx)==0) {
+# ProbeSNP <- function(probeID,probeIds){
+	#idx <- grep(probeID,probesOverlappingSnps)
+	# if (length(idx)==0) {
+		# variant = 0
+		# return(variant)
+	# } else { variant = 1
+		#return(variant) }
+# }
+ProbeSNP <- function(probeID){
+	if (is.element(probeID,probesOverlappingSnps)) {
 		variant = 0
 		return(variant)
 	} else { variant = 1
-		return(variant) }
+		return(variant) 
+	}
 }
 
-# SNP_overlap <- apply(as.matrix(probeIds,ncol=1),1,ProbeSNP)
-load(file='/group/stranger-lab/forCharles/probes_mapping/Robjects/exmask.Robj')
+#SNP_overlap <- apply(as.matrix(probeIds,ncol=1),1,ProbeSNP)
+SNP_overlap <- is.element(probeIds,probesOverlappingSnps$V1)
+SNP_overlap <- as.numeric(SNP_overlap)
+badScores = runif(length(probeIds),min=0,max=1)
+# load(file='/group/stranger-lab/forCharles/probes_mapping/Robjects/exmask.Robj')
+
+corr_table = data.frame(probeIds,multiMappingIdx,numMultiMap,badScores,SNP_overlap)
