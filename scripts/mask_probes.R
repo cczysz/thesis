@@ -1,0 +1,26 @@
+probe_dir = '/group/stranger-lab/forCharles/probes_mapping/intersections/'
+
+probes_geneMapping <- read.table(file=paste(probe_dir,'probes.gencode.v22.exon.intersect_stats_ensembl.txt',sep=''),
+	header=F,
+	as.is=T,
+	sep=',',
+	skip=1)
+
+probeIds <- probes_geneMapping[,1]
+
+multiMappingIdx <- probes_geneMapping[,2] - 1
+multiMappingIdx[multiMappingIdx > 0] <- 1
+
+probesOverlappingSnps <<- read.table(file='/home/t.cczysz/probes_SNP_overlap.txt',header=F,as.is=T)
+
+ProbeSNP <- function(probeID,probeIds){
+	idx <- grep(probeID,probesOverlappingSnps)
+	if (length(idx)==0) {
+		variant = 0
+		return(variant)
+	} else { variant = 1
+		return(variant) }
+}
+
+# SNP_overlap <- apply(as.matrix(probeIds,ncol=1),1,ProbeSNP)
+load(file='/group/stranger-lab/forCharles/probes_mapping/Robjects/exmask.Robj')
