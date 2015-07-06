@@ -7,10 +7,10 @@ from getSNAPResults import snapresults
 
 out_file = open('/home/t.cczysz/broad_results.txt','w+')
 
-with open('/home/t.cczysz/rsids.txt') as f:
+with open('/home/t.cczysz/rsid_list.txt') as f:
 	snp_list = f.readlines()
 
-sub_lists = [snp_list[i:i+100] for i in range(0,len(snp_list),100)]
+sub_lists = [snp_list[i:i+1000] for i in range(0,len(snp_list),1000)]
 
 for sub_list in sub_lists:
 	#sub_list = [snp.strip() for snp in sub_list]
@@ -35,4 +35,3 @@ for sub_list in sub_lists:
 		# rsid_1 , rsid_2 = line[0] , line[1]
 		out_file.write(line)
 out_file.close()
-
