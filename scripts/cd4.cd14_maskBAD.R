@@ -9,5 +9,5 @@ mean_ps_scores <- function(probeset_id) {
 mean_scores <- apply(as.matrix(unique(as.numeric(exmask[[1]]$probeset)),ncol=1),1,mean_ps_scores)
 
 pdf('mean_ps_scores')
-density(mean_scores)
+plot(density(mean_scores))
 dev.off()
