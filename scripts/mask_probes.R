@@ -45,4 +45,4 @@ SNP_overlap <- as.numeric(SNP_overlap)
 corr_table = data.frame(probeIds,multiMappingIdx,numMultiMap,SNP_overlap)
 row.names(corr_table) <- corr_table$probeIds
 
-corr_table <- merge(corr_table,maskBADscoresDF$quality.score,by=0)
+# corr_table <- merge(corr_table,maskBADscoresDF$quality.score,by=0)

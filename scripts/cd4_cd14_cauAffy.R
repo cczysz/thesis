@@ -6,6 +6,7 @@ library(maskBAD)
 cd4_dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD4"
 cd14_dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14"
 
+# uniq_ids = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files"
 cd4_phen = read.table(file=paste(cd4_dir,'CD4.Samples.Caucasian.txt',sep='/'),header=T,as.is=T,sep=',',fill=T)
 
 cd14_phen = read.table(file=paste(cd14_dir,'CD14.Caucasian.txt',sep='/'),header=T,as.is=T,sep=',',fill=T)
