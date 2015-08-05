@@ -32,5 +32,5 @@ row.names(phenoData(rawData)) <- data_ids
 fit1 <- fitProbeLevelModel(rawData,normalize=F,background=F)
 
 RLE(fit1,type='values')
-NUSE(fit1,type='values')
+NUSE(fit1,type='values'
 dev.off()
