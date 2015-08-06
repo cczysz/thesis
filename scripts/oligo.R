@@ -5,34 +5,35 @@
 
 Sys.setenv(R_THREADS=4)
 library(oligo)
+library(limma)
 
-files_dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
-# out_dir = paste(files_dir,'out',sep='')
-out_dir = '/scratch/t.cczysz/'
-setwd(files_dir)
+files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
+# out.dir = paste(files.dir,'out',sep='')
+out.dir = '/scratch/t.cczysz/'
+setwd(files.dir)
 
 # Normalization files
-phenotype_file = "CD14.Samples.POSTQC.ImmVarFinal.txt"
+phenotype.file = "CD14.Samples.POSTQC.ImmVarFinal.txt"
 # raw_exp_rfile = "cd4_cau_raw.RData"
 # norm_exp_rfile = "cd4_cau_expr.RData"
 
-probeinfo = "/home/t.cczysz/HuGeneProbeInfo.csv"
+probe.info = "/home/t.cczysz/HuGeneProbeInfo.csv"
 
-samples <- read.csv(phenotype_file,header=T)
+samples <- read.csv(phenotype_file, header=T)
 
-data_cau <- samples[samples$Race == 'Caucasian',]
-data_subset <- data_cau[sample(1:length(data_cau),10),]
+data.cau <- samples[samples$Race == 'Caucasian', ]
+data.subset <- data.cau[sample(1:length(data.cau), 10), ]
 
-data_subset_ids <- data_subset[,1]
-data_subset_files <- data_subset[,2]
-data_subset_sex <- data_subset$Sex
+data.ids.subset <- data.subset[,1]
+data.files.subset <- data.subset[,2]
+data.sex.subset <- data.subset$Sex
 
-rawData <- read.celfiles(as.character(data_subset_files))
+raw.data.subset <- read.celfiles(as.character(data.files.subset))
 
 #row.names(phenoData(rawData)) <- data_subset_ids
 # fit1 <- fitProbeLevelModel(rawData,normalize=F,background=F)
 # RMA defaults to background subtraction, quantile normalization, and summarization via median polish
-data_rma <- rma(rawData)
+data.rma.subset <- rma(raw.data.subset)
 
 # Remove Probes
 	# Write code to remove given probes from raw data, perform normalization
@@ -43,13 +44,21 @@ data_rma <- rma(rawData)
 # Outputs:
 	# Factors: #(Genes)x#(Factors) matrix of PEER factors for use in linear model
 sex <- as.numeric(data_subset_sex == 'Male')
-expression <- exprs(data_rma)
-source('/home/t.cri.cczysz/thesis/scripts/peer.r',echo=T)
+expression <- exprs(data.rma.subset)
+source('/home/t.cri.cczysz/thesis/scripts/peer.r', echo=T)
 
 ### Calculating Residuals
 # Call make_residuals function in apply over rows of probeset expression
-make_residuals <- function(in_row) {
-        residuals(lm(in_row ~ 0 + peer_factors[,1] + peer_factors[,2] + peer_factors[,3] + peer_factors[,4] + peer_factors[,5] + peer_factors[,6] + peer_factors[,7] + peer_factors[,8] + peer_factors[,9] + peer_factors[,10] + peer_factors[,11] + peer_factors[,12] + peer_factors[,13] + peer_factors[,14] + peer_factors[,15] + peer_factors[,16] + peer_factors[,17] + peer_factors[,18] + peer_factors[,19] + peer_factors[,20]))
+MakeResiduals <- function(in.row) {
+        residuals(lm(in.row ~ 0 + peer_factors[, 1] + peer_factors[, 2] + peer_factors[, 3] + peer_factors[, 4] + peer_factors[, 5] + peer_factors[, 6] + peer_factors[, 7] + peer_factors[, 8] + peer_factors[, 9] + peer_factors[, 10] + peer_factors[, 11] + peer_factors[, 12] + peer_factors[, 13] + peer_factors[, 14] + peer_factors[, 15] + peer_factors[, 16] + peer_factors[, 17] + peer_factors[, 18] + peer_factors[, 19] + peer_factors[, 20]))
 }
-residuals <- apply(as.matrix(expression),1,make_residuals)
+residuals <- apply(as.matrix(expression), 1, MakeResiduals)
 # DE files
+
+samples <- as.factor(sex)
+design <- model.matrix(~0 + samples)
+colnames(design) <- c("Female","Male")
+fit <- lmFit(exp, design)
+contrast.matrix <- makeContrasts(mf = Male - Female, levels=design)
+contrast.fit <- contrasts.fit(fit, contrast.matrix)
+eb.fit <- eBayes(contrast.fit, robust=TRUE)
