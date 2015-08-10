@@ -79,8 +79,8 @@ contrast.fit <- contrasts.fit(fit, contrast.matrix)
 eb.fit <- eBayes(contrast.fit, robust=TRUE)
 print(topTable(eb.fit, number=100))
 
-g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods,color=as.factor(chrs),label=chrs)) 
+g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 
 pdf('/home/t.cri.cczysz/volcano.pdf')
-g + geom_text() + xlab("fold change") + ylab("log odds")
+g + geom_point() + xlab("fold change") + ylab("log odds")
 dev.off() 
