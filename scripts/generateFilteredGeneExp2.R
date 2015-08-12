@@ -4,6 +4,7 @@ setwd('/group/stranger-lab/moliva/ImmVar')
 ###### MAPPING BASED FILTERING
 
 load("probes_mapping/Robjects/merge_probes_DF.Robj")
+
 par.genes=as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
 Y.degenerate=as.character(read.table("probes_mapping/annotations/chrY.degenerate.txt")[,1])
 Y.degenerate_Xhomolog=as.character(read.table("probes_mapping/annotations/chrY.degenerate_Xhomolog.txt")[,1])
@@ -36,20 +37,22 @@ length(filt_probes)
 ### Background-correction, normalization of probe-level expression values.
 ### Step already done. Load Robj
 
+# Imports `normalized2`, probe x individual matrix of per-probe intensities 
+# Produced using rma with summarize=F
 load("Robjects/oligo.bgSubstractedNormalized.geneMappingProbes.Robj")
 
 ### Eliminate filtered probes
 
 normalized2=normalized2[as.character(rownames(normalized2)[!rownames(normalized2)%in%filt_probes]),]
 
-
 ### Calculate densities gene expression. Identify global minimum, which will be the gene expression threshold.
 ### Previously, store ImmVarID2 for males and females on vectors of the same name
 
-load("Robjects/phen.Robj")
+load("Robjects/phen.Robj") # Phenotype file for CD14 Caucasian individuals; imports `phen`
 males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
 females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
 
+if (F) {
 pdf("ProbeExps.pdf")
 hist(log2(normalized2[,males]),prob=T)
 dM <- density(log2(normalized2[,males]))
@@ -65,6 +68,7 @@ abline(v=min_females)
 lines(dF)
 legend("topright",legend=paste(c("min f(x) = ",min_females,collapse="")))
 dev.off()
+}
 
 median_genexp_females_probes=apply(normalized2[,females],1,median)
 median_genexp_males_probes=apply(normalized2[,males],1,median)
@@ -87,6 +91,7 @@ length(filt_Y_probe_exp)
 merge_probes_DF_filt=merge_probes_DF_filt[!merge_probes_DF_filt$probeId%in%filt_Y_probe_exp,]
 normalized2=normalized2[as.character(rownames(normalized2)[!rownames(normalized2)%in%filt_Y_probe_exp]),]
 
+# Summarization step
 exp_genes <- basicRMA(normalized2, as.character(merge_probes_DF_filt$gene_ensembl), normalize=F, background=F)
 
 save(exp_genes,file="Robjects/exp_genes.Robj")
