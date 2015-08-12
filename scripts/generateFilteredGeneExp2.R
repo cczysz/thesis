@@ -1,4 +1,5 @@
 library(oligo)
+setwd('/group/stranger-lab/moliva/ImmVar')
 
 ###### MAPPING BASED FILTERING
 

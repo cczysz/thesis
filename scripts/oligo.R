@@ -9,17 +9,18 @@ library(limma)
 library(ggplot2)
 
 files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
-# out.dir = paste(files.dir,'out',sep='')
-out.dir = '/scratch/t.cczysz/'
 setwd(files.dir)
 
-# Normalization files
+out.dir = '/scratch/t.cczysz/'
+
 phenotype.file = "CD14.Samples.POSTQC.ImmVarFinal.txt"
+probe.info = "/home/t.cri.cczysz/HuGeneProbeInfo.csv"
+
+# Save files
 peer.factors.f = "/scratch/t.cczysz/peer_factors.Robj"
+residual.exp.f = "/scratch/t.cczysz/residuals.Robj"
 # raw_exp_rfile = "cd4_cau_raw.RData"
 # norm_exp_rfile = "cd4_cau_expr.RData"
-
-probe.info = "/home/t.cczysz/HuGeneProbeInfo.csv"
 
 samples <- read.csv(phenotype.file, header=T)
 
@@ -56,19 +57,13 @@ if (file.exists(file=peer.factors.f)) load(file=peer.factors.f) else {
 
 ### Calculating Residuals
 # Call make_residuals function in apply over rows of probeset expression
-dim(expression)
-dim(peer.factors)
-head(peer.factors)
-MakeResiduals <- function(input.row) {
-        #residuals(lm(input.row ~ 0 + peer.factors[, 2] + peer.factors[, 3] + peer.factors[, 4] + peer.factors[, 5] + peer.factors[, 6] + peer.factors[, 7] + peer.factors[, 8] + peer.factors[, 9] + peer.factors[, 10] + peer.factors[, 11] + peer.factors[, 12] + peer.factors[, 13] + peer.factors[, 14] + peer.factors[, 15] + peer.factors[, 16] + peer.factors[, 17] + peer.factors[, 18] + peer.factors[, 19] + peer.factors[, 20] + peer.factors[, 21]))
-	residuals(lm(input.row ~ 0 + peer.factors[, -1]))
+if (file.exists(file=residual.exp.f)) load(file=residual.exp.f) else {
+	MakeResiduals <- function(input.row) {
+		residuals(lm(input.row ~ 0 + peer.factors[, -1]))
+	}
+	expr.residuals <- apply(expression, 1, MakeResiduals)
+	expr.residuals <- t(expr.residuals)
 }
-
-expr.residuals <- apply(expression, 1, MakeResiduals)
-expr.residuals <- t(expr.residuals)
-print(expr.residuals[1:5,1:10])
-dim(expr.residuals)
-# DE files
 
 samples <- as.factor(data.sex.subset)
 design <- model.matrix(~0 + samples)
@@ -77,7 +72,22 @@ fit <- lmFit(expr.residuals, design)
 contrast.matrix <- makeContrasts(mf = Male - Female, levels=design)
 contrast.fit <- contrasts.fit(fit, contrast.matrix)
 eb.fit <- eBayes(contrast.fit, robust=TRUE)
-print(topTable(eb.fit, number=100))
+
+top.probesets <- row.names(topTable(eb.fit, number=100))
+
+GetProbesetInfo <- function(probeset){
+	cmd <- paste("grep", as.character(probeset), probe.info)
+	system(command=cmd, intern=T)
+}
+
+# probeset.info <- apply(as.matrix(top.probesets),1,GetProbesetInfo)
+probeset.info <- read.csv(file=probe.info,header=T,row.names=1,as.is=T,strip.white=T)
+probeset.info <- as.matrix(probeset.info)
+
+de.genes <- probeset.info[rownames(topTable(eb.fit, number=100)), ]
+head(de.genes)
+#write(probeset.info[rownames(topTable(eb.fit, number=100)), ], file="/scratch/t.cczysz/de_probe.info")
+#write(probeset.info,file="de_probe.info")
 
 g = ggplot(data=data.frame(eb.fit),aes(x=coefficients,y=lods)) 
 
