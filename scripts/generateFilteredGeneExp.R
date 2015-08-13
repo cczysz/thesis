@@ -3,6 +3,7 @@ setwd('/group/stranger-lab/moliva/ImmVar/')
 ###### MAPPING BASED FILTERING
 
 load("probes_mapping/Robjects/merge_probes_DF.Robj")
+
 par.genes=as.character(read.table("probes_mapping/annotations/par.genes.txt")[,1])
 Y.degenerate=as.character(read.table("probes_mapping/annotations/chrY.degenerate.txt")[,1])
 Y.degenerate_Xhomolog=as.character(read.table("probes_mapping/annotations/chrY.degenerate_Xhomolog.txt")[,1])
@@ -17,6 +18,23 @@ merge_probes_DF=unique(merge_probes_DF[,c("probeId","gene_ensembl","overlapping_
 dup=as.character(merge_probes_DF$probeId[duplicated(merge_probes_DF$probeId)])
 index_rows=seq(nrow(merge_probes_DF))
 
+# Turning into apply
+
+RmXHybrid <- function(d,merge_probes_DF=merge_probes_DF,index_rows=index_rows) {
+
+	row=index_rows[merge_probes_DF$probeId%in%dup[d]]; 
+	cross=as.character(merge_probes_DF[row,"crosshyb_type"]); 
+	if (sum(as.numeric(cross%in%c("1","3"))) == 2) { merge_probes_DF[row[1],"crosshyb_type"] = "3"} 
+	else if (sum(as.numeric(cross%in%c("1","0"))) == 2) { merge_probes_DF[row[1],"crosshyb_type"] = "0";} 
+	else if (sum(as.numeric(cross%in%c("3","0"))) == 2) { merge_probes_DF[row[1],"crosshyb_type"] = "0";} 
+	else {break}; 
+	return(row[2])
+}
+
+to.remove <- apply(as.matrix(seq(length(dup))),1,RmXHybrid,merge_probes_DF=merge_probes_DF,index_rows=index_rows)
+write(file='/scratch/t.cczysz/toremove.txt',as.numeric(to.remove))
+
+if (F) {
 for (d in seq(length(dup))) { 
 	row=index_rows[merge_probes_DF$probeId%in%dup[d]]; 
 	cross=as.character(merge_probes_DF[row,"crosshyb_type"]); 
@@ -27,7 +45,9 @@ for (d in seq(length(dup))) {
 	merge_probes_DF=merge_probes_DF[-row[2],]; 
 	length(index_rows) <- length(index_rows)-1;
 }
+}
 
+merge_probes_DF <- merge_probes_DF[-to.remove,]
 ## Counts after pre-filtering
 
 length(unique(merge_probes_DF$gene_ensembl))
@@ -162,4 +182,4 @@ length(genes)
 length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%genes])
 exp_genes=exp_genes[genes,]
 
-save(exp_genes,file="Robjects/exp_genes.Robj")
+save(exp_genes,file="/scratch/t.cczysz/exp_genes.Robj")
