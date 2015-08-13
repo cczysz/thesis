@@ -11,4 +11,4 @@
 
 module load R/3.1.0
 
-R CMD BATCH --no-save --no-restore /home/t.cri.cczysz/thesis/scripts/generateFilteredGeneExp2.R
+R CMD BATCH --no-save --no-restore /home/t.cri.cczysz/thesis/scripts/generateFilteredGeneExp.R
