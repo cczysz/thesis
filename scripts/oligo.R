@@ -25,7 +25,7 @@ residual.exp.f = "/scratch/t.cczysz/residuals.Robj"
 samples <- read.csv(phenotype.file, header=T)
 
 data.cau <- samples[samples$Race == 'Caucasian', ]
-# data.subset <- data.cau[sample(1:nrow(data.cau), 20), ]
+#data.subset <- data.cau[sample(1:nrow(data.cau), 10), ]
 data.subset <- data.cau
 
 data.ids.subset <- data.subset[,1]
@@ -33,14 +33,15 @@ data.files.subset <- data.subset[,2]
 data.sex.subset <- data.subset$Sex
 
 raw.data.subset <- read.celfiles(as.character(data.files.subset))
-
-#row.names(phenoData(rawData)) <- data_subset_ids
-# fit1 <- fitProbeLevelModel(rawData,normalize=F,background=F)
-# RMA defaults to background subtraction, quantile normalization, and summarization via median polish
-data.rma.subset <- rma(raw.data.subset)
-
 # Remove Probes
 	# Write code to remove given probes from raw data, perform normalization
+if (F) {
+bg <- oligo::backgroundCorrect(raw.data.subset)
+normalized2 <- normalize(bg)
+}
+
+# RMA defaults to background subtraction, quantile normalization, and summarization via median polish
+# data.rma.subset <- rma(raw.data.subset,target=NULL)
 # PEER files
 # Required for PEER:
 	# Raw Expression as `expression`
