@@ -52,6 +52,12 @@ load("Robjects/phen.Robj") # Phenotype file for CD14 Caucasian individuals; impo
 males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
 females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
 
+dM <- density(log2(exprs(normalized2)[,males]))
+min_males=optimize(approxfun(dM$x,dM$y),interval=c(3,4))$minimum
+
+dF <- density(log2(exprs(normalized2)[,females]))
+min_females=optimize(approxfun(dF$x,dF$y),interval=c(3,4))$minimum
+
 if (F) {
 pdf("ProbeExps.pdf")
 hist(log2(normalized2[,males]),prob=T)
@@ -70,8 +76,8 @@ legend("topright",legend=paste(c("min f(x) = ",min_females,collapse="")))
 dev.off()
 }
 
-median_genexp_females_probes=apply(normalized2[,females],1,median)
-median_genexp_males_probes=apply(normalized2[,males],1,median)
+median_genexp_females_probes=apply(log2(exprs(normalized2)[,females]),1,median)
+median_genexp_males_probes=apply(log2(exprs(normalized2)[,males]),1,median)
 
 ###  Filter Y-linked non-PAR probes for which median expression in females is above threshold and distribution of expressions in male and females are equal (wilxon test pval > 10-5)
 
@@ -79,7 +85,7 @@ filt_Y_probe_exp=vector()
 for (gene in Y.all[Y.all[!Y.all%in%par.genes]%in%merge_probes_DF_filt$gene_ensembl]) {
 	probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
 	for (probe in probes) {
-                pval=wilcox.test(log2(normalized2[as.character(probe),females]),log2(normalized2[as.character(probe),males]))$p.value
+                pval=wilcox.test(log2(exprs(normalized2)[as.character(probe),females]),log2(exprs(normalized2)[as.character(probe),males]))$p.value
 		if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
 			filt_Y_probe_exp=c(filt_Y_probe_exp,probe)
 		}
@@ -92,6 +98,6 @@ merge_probes_DF_filt=merge_probes_DF_filt[!merge_probes_DF_filt$probeId%in%filt_
 normalized2=normalized2[as.character(rownames(normalized2)[!rownames(normalized2)%in%filt_Y_probe_exp]),]
 
 # Summarization step
-exp_genes <- basicRMA(normalized2, as.character(merge_probes_DF_filt$gene_ensembl), normalize=F, background=F)
+exp_genes <- basicRMA(exprs(normalized2), as.character(merge_probes_DF_filt$gene_ensembl), normalize=F, background=F)
 
 save(exp_genes,file="Robjects/exp_genes.Robj")
