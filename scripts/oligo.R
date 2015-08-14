@@ -8,37 +8,46 @@ library(oligo)
 library(limma)
 library(ggplot2)
 
-files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
-setwd(files.dir)
+LoadData <- function(population,cell.type) {
+	files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
+	setwd(files.dir)
 
-out.dir = '/scratch/t.cczysz/'
+	out.dir = '/scratch/t.cczysz/'
 
-phenotype.file = "CD14.Samples.POSTQC.ImmVarFinal.txt"
-probe.info = "/home/t.cri.cczysz/HuGeneProbeInfo.csv"
+	phenotype.file = "CD14.Samples.POSTQC.ImmVarFinal.txt"
+	probe.info = "/home/t.cri.cczysz/HuGeneProbeInfo.csv"
 
-# Save files
-peer.factors.f = "/scratch/t.cczysz/peer_factors.Robj"
-residual.exp.f = "/scratch/t.cczysz/residuals.Robj"
-# raw_exp_rfile = "cd4_cau_raw.RData"
-# norm_exp_rfile = "cd4_cau_expr.RData"
+	# Save files
+	peer.factors.f = "/scratch/t.cczysz/peer_factors.Robj"
+	residual.exp.f = "/scratch/t.cczysz/residuals.Robj"
+	# raw_exp_rfile = "cd4_cau_raw.RData"
+	# norm_exp_rfile = "cd4_cau_expr.RData"
 
-samples <- read.csv(phenotype.file, header=T)
+	samples <- read.csv(phenotype.file, header=T)
 
-data.cau <- samples[samples$Race == 'Caucasian', ]
-#data.subset <- data.cau[sample(1:nrow(data.cau), 10), ]
-data.subset <- data.cau
+	data.cau <- samples[samples$Race == 'Caucasian', ]
+	#data.subset <- data.cau[sample(1:nrow(data.cau), 10), ]
+	data.subset <- data.cau
 
-data.ids.subset <- data.subset[,1]
-data.files.subset <- data.subset[,2]
-data.sex.subset <- data.subset$Sex
+	data.ids.subset <- data.subset[,1]
+	data.files.subset <- data.subset[,2]
+	data.sex.subset <- data.subset$Sex
 
-raw.data.subset <- read.celfiles(as.character(data.files.subset))
-# Remove Probes
-	# Write code to remove given probes from raw data, perform normalization
-if (F) {
-bg <- oligo::backgroundCorrect(raw.data.subset)
-normalized2 <- normalize(bg)
+	raw.data.subset <- read.celfiles(as.character(data.files.subset))
+
+	# Remove Probes
+		# Write code to remove given probes from raw data, perform normalization
+	if (F) {
+	bg <- oligo::backgroundCorrect(raw.data.subset)
+	normalized2 <- normalize(bg)
+	}
 }
+
+source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
+
+raw.data <- load.cel.files("Caucasian","CD14")
+
+source('/home/t.cri.cczysz/thesis/scripts/removeProbes.R')
 
 # RMA defaults to background subtraction, quantile normalization, and summarization via median polish
 # data.rma.subset <- rma(raw.data.subset,target=NULL)
@@ -52,7 +61,8 @@ sex <- as.numeric(data.sex.subset == 'Male')
 expression <- exprs(data.rma.subset)
 
 if (file.exists(file=peer.factors.f)) load(file=peer.factors.f) else {
-  source('/home/t.cri.cczysz/thesis/scripts/peer.R', echo=T)
+  source('/home/t.cri.cczysz/thesis/scripts/peer.R')
+  peer.factors <- RunPeer(expression,k=20,sex)
   save(peer.factors,file=peer.factors.f) 
 }
 
