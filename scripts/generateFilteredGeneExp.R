@@ -83,7 +83,11 @@ length(unique(merge_probes_DF_filt$probeId))
 ### Background-correction, normalization of probe-level expression values.
 ### Step already done. Load Robj
 
-load("Robjects/oligo.bgSubstractedNormalized.geneMappingProbes.Robj")
+#load("Robjects/oligo.bgSubstractedNormalized.geneMappingProbes.Robj")
+source('/group/stranger-lab/moliva/ImmVar/scripts/generate_exp_object.R')
+
+#raw_data <- load.cel.files("Caucasian","CD14")
+normalized2 <- backcorrect.normalize.probe.level(load.cel.files("Caucasian","CD14"))
 
 ### Eliminate filtered probes
 
