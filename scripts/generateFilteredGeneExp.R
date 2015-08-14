@@ -1,5 +1,6 @@
 library(oligo)
 setwd('/group/stranger-lab/moliva/ImmVar/')
+
 ###### MAPPING BASED FILTERING
 
 load("probes_mapping/Robjects/merge_probes_DF.Robj")
@@ -31,8 +32,10 @@ RmXHybrid <- function(d,merge_probes_DF=merge_probes_DF,index_rows=index_rows) {
 	return(row[2])
 }
 
-to.remove <- apply(as.matrix(seq(length(dup))),1,RmXHybrid,merge_probes_DF=merge_probes_DF,index_rows=index_rows)
-write(file='/scratch/t.cczysz/toremove.txt',as.numeric(to.remove))
+if (file.exists('/scratch/t.cczysz/toremove.txt')) to.remove <- read.table(file='/scratch/t.cczysz/toremove.txt',header=F) else {
+	to.remove <- apply(as.matrix(seq(length(dup))),1,RmXHybrid,merge_probes_DF=merge_probes_DF,index_rows=index_rows)
+	write(file='/scratch/t.cczysz/toremove.txt',as.matrix(to.remove))
+}
 
 if (F) {
 for (d in seq(length(dup))) { 
@@ -47,6 +50,7 @@ for (d in seq(length(dup))) {
 }
 }
 
+to.remove <- as.numeric(unlist(to.remove))
 merge_probes_DF <- merge_probes_DF[-to.remove,]
 ## Counts after pre-filtering
 
@@ -87,20 +91,23 @@ length(unique(merge_probes_DF_filt$probeId))
 source('/group/stranger-lab/moliva/ImmVar/scripts/generate_exp_object.R')
 
 #raw_data <- load.cel.files("Caucasian","CD14")
-normalized2 <- backcorrect.normalize.probe.level(load.cel.files("Caucasian","CD14"))
+#normalized2 <- backcorrect.normalize.probe.level(load.cel.files("Caucasian","CD14"))
+normalized2 <- load.cel.files("Caucasian","CD14")
 
 ### Eliminate filtered probes
 
 #normalized2=unique(normalized2)
 normalized2=normalized2[as.character(rownames(normalized2)[!rownames(normalized2)%in%filt_probes]),]
 
-
+normalized2 <- backcorrect.normalize.probe.level(normalized2)
 ### Calculate densities gene expression. Identify global minimum, which will be the gene expression threshold.
 ### Previously, store ImmVarID2 for males and females on vectors of the same name
 
 load("Robjects/phen.Robj")
-males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
-females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
+#males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
+males <- phen[phen$Race=="Caucasian", ]$Sex == "Male"
+females <- phen[phen$Race=="Caucasian", ]$Sex == "Female"
+#females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
 
 dM <- density(log2(exprs(normalized2)[,males]))
 min_males=optimize(approxfun(dM$x,dM$y),interval=c(3,4))$minimum
@@ -126,8 +133,8 @@ legend("topright",legend=paste(c("min f(x) = ",min_females,collapse="")))
 dev.off()
 }
 
-median_genexp_females_probes=apply(log2(normalized2[,females]),1,median)
-median_genexp_males_probes=apply(log2(normalized2[,males]),1,median)
+median_genexp_females_probes=apply(log2(exprs(normalized2)[,females]),1,median)
+median_genexp_males_probes=apply(log2(exprs(normalized2)[,males]),1,median)
 
 ###  Filter Y-linked non-PAR probes for which median expression in females is above threshold and distribution of expressions in male and females are equal (wilxon test pval > 10-5)
 
