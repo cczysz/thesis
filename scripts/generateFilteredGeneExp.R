@@ -20,7 +20,6 @@ dup=as.character(merge_probes_DF$probeId[duplicated(merge_probes_DF$probeId)])
 index_rows=seq(nrow(merge_probes_DF))
 
 # Turning into apply
-
 RmXHybrid <- function(d,merge_probes_DF=merge_probes_DF,index_rows=index_rows) {
 
 	row=index_rows[merge_probes_DF$probeId%in%dup[d]]; 
@@ -88,22 +87,24 @@ length(unique(merge_probes_DF_filt$probeId))
 ### Step already done. Load Robj
 
 #load("Robjects/oligo.bgSubstractedNormalized.geneMappingProbes.Robj")
-source('/group/stranger-lab/moliva/ImmVar/scripts/generate_exp_object.R')
+# source('/group/stranger-lab/moliva/ImmVar/scripts/generate_exp_object.R')
+source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
 
 #raw_data <- load.cel.files("Caucasian","CD14")
 #normalized2 <- backcorrect.normalize.probe.level(load.cel.files("Caucasian","CD14"))
-normalized2 <- load.cel.files("Caucasian","CD14")
+raw.data <- load.cel.files("Caucasian","CD14")
+normalized2 <- backcorrect.normalize.probe.level(raw.data)
 
 ### Eliminate filtered probes
 
 #normalized2=unique(normalized2)
 normalized2=normalized2[as.character(rownames(normalized2)[!rownames(normalized2)%in%filt_probes]),]
 
-normalized2 <- backcorrect.normalize.probe.level(normalized2)
 ### Calculate densities gene expression. Identify global minimum, which will be the gene expression threshold.
 ### Previously, store ImmVarID2 for males and females on vectors of the same name
 
 load("Robjects/phen.Robj")
+phen <- phen[phen$CellType == 'CD14+16-Mono', ]
 #males=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Male","ImmVarID2"])]
 males <- phen[phen$Race=="Caucasian", ]$Sex == "Male"
 females <- phen[phen$Race=="Caucasian", ]$Sex == "Female"
@@ -144,7 +145,7 @@ for (gene in unique(as.character(merge_probes_DF_filt[merge_probes_DF_filt$gene_
 	for (probe in probes) {
                 pval=wilcox.test(log2(exprs(normalized2)[probe,females]),log2(exprs(normalized2)[probe,males]))$p.value
 		if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
-			filt_Y_probe_exp=c(filt_Y_probe_exp,probe)
+			filt_Y_probe_exp=c(filt_Y_probe_exp, probe)
 		}
         }
 }
@@ -193,4 +194,4 @@ length(genes)
 length(merge_probes_DF_filt$probeId[merge_probes_DF_filt$gene_ensembl%in%genes])
 exp_genes=exp_genes[genes,]
 
-save(exp_genes,file="/scratch/t.cczysz/exp_genes.Robj")
+save(exp_genes, file="/scratch/t.cczysz/exp_genes.Robj")
