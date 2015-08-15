@@ -9,4 +9,5 @@ RunPeer <- function(expression, k=20, covs) {
 	PEER_setNk(model,k)
 	PEER_update(model)
 	peer.factors = PEER_getX(model)
+	return(peer.factors)
 }
