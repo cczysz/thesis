@@ -8,10 +8,12 @@ library(oligo)
 library(limma)
 library(ggplot2)
 
-load('/group/stranger-lab/moliva/ImmVar/probes_mapping/Robjects/merge_probes_DF.Robj')
-#LoadData <- function(population,cell.type) {
-files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
-setwd(files.dir)
+# Populations: Caucasian, African-American, Asian
+# Cell types: CD14, CD4
+LoadData <- function(population,cell.type) {
+if (F) {
+#files.dir = "/group/stranger-lab/nicolel/mRNA_expression/CEL_files/CD14/"
+#setwd(files.dir)
 
 out.dir = '/scratch/t.cczysz/'
 
@@ -33,27 +35,11 @@ data.subset <- data.cau
 data.ids.subset <- data.subset[,1]
 data.files.subset <- data.subset[,2]
 data.sex.subset <- data.subset$Sex
-
-#raw.data.subset <- read.celfiles(as.character(data.files.subset))
-
-# Remove Probes
-	# Write code to remove given probes from raw data, perform normalization
-if (F) {
-bg <- oligo::backgroundCorrect(raw.data.subset)
-normalized2 <- normalize(bg)
 }
-#}
 
 load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
 phen <- phen[phen$CellType == 'CD14+16-Mono', ]
-#source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
 
-#raw.data <- load.cel.files("Caucasian","CD14")
-
-# source('/home/t.cri.cczysz/thesis/scripts/removeProbes.R')
-
-# RMA defaults to background subtraction, quantile normalization, and summarization via median polish
-# data.rma.subset <- rma(raw.data.subset,target=NULL)
 # PEER files
 # Required for PEER:
 	# Raw Expression as `expression`
@@ -65,6 +51,7 @@ phen <- phen[phen$CellType == 'CD14+16-Mono', ]
 load('/group/stranger-lab/moliva/ImmVar/Robjects/exp_genes.Robj')
 expression <- exp_genes
 
+if (F) {
 if (file.exists(file=peer.factors.f)) load(file=peer.factors.f) else {
   source('/home/t.cri.cczysz/thesis/scripts/peer.R')
   sex <- as.numeric(phen[phen$Race == 'Caucasian', ]$Sex == 'Male')
@@ -72,14 +59,17 @@ if (file.exists(file=peer.factors.f)) load(file=peer.factors.f) else {
   # save(peer.factors, file=peer.factors.f) 
 }
 save(peer.factors, file='/scratch/t.cczysz/peer_factors.Robj') 
+}
 
 ### Calculating Residuals
+if (F) {
 if (file.exists(file=residual.exp.f)) load(file=residual.exp.f) else {
 	MakeResiduals <- function(input.row,peer.factors) {
 		residuals(lm(input.row ~ 0 + peer.factors[, -1]))
 	}
 	expr.residuals <- apply(expression, 1, MakeResiduals, peer.factors=peer.factors)
 	expr.residuals <- t(expr.residuals)
+}
 }
 
 PerformDEAnalysis <- function(expr,samples) {
