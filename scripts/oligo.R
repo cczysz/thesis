@@ -45,7 +45,8 @@ normalized2 <- normalize(bg)
 #}
 
 load('/group/stranger-lab/moliva/ImmVar/Robjects/phen.Robj')
-source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
+phen <- phen[phen$CellType == 'CD14+16-Mono', ]
+#source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
 
 #raw.data <- load.cel.files("Caucasian","CD14")
 
@@ -60,15 +61,15 @@ source('/home/t.cri.cczysz/thesis/scripts/generate_exp_object.R')
 # Outputs:
 	# Factors: #(Genes)x#(Factors) matrix of PEER factors for use in linear model
 
-load('/scratch/t.cczysz/exp_genes.Robj')
-#load('/group/stranger-lab/moliva/ImmVar/Robjects/exp_genes.Robj')
+#load('/scratch/t.cczysz/exp_genes.Robj')
+load('/group/stranger-lab/moliva/ImmVar/Robjects/exp_genes.Robj')
 expression <- exp_genes
 
 if (file.exists(file=peer.factors.f)) load(file=peer.factors.f) else {
   source('/home/t.cri.cczysz/thesis/scripts/peer.R')
   sex <- as.numeric(phen[phen$Race == 'Caucasian', ]$Sex == 'Male')
   peer.factors <- RunPeer(expression,k=20,sex)
-  save(peer.factors, file=peer.factors.f) 
+  # save(peer.factors, file=peer.factors.f) 
 }
 save(peer.factors, file='/scratch/t.cczysz/peer_factors.Robj') 
 
@@ -89,7 +90,7 @@ PerformDEAnalysis <- function(expr,samples) {
 
 	contrast.matrix <- makeContrasts(mf = Male - Female, levels=design)
 	contrast.fit <- contrasts.fit(fit, contrast.matrix)
-	eb.fit <- eBayes(contrast.fit, robust=TRUE)
+	eb.fit <- eBayes(contrast.fit, robust=F)
 }
 
 eb.fit <- PerformDEAnalysis(expr.residuals,as.factor(sex))
@@ -104,7 +105,7 @@ g + geom_point() + xlab("fold change") + ylab("log odds")
 dev.off() 
 
 pdf(file='/home/t.cri.cczysz/de_probesets.pdf')
-for (set in top.probesets) {
+for (set in top.de.genes) {
 	plot(density(expr.residuals[set, !!sex]),col='blue',xlim=c(-1,1),ylim=c(0,1))
 	lines(density(expr.residuals[set, !sex]),col='red')
 }
