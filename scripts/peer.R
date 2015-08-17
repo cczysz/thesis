@@ -2,7 +2,7 @@ library(peer)
 
 RunPeer <- function(expression, k=20, covs) {
 	model = PEER()
-	PEER_setCovariates(model,as.matrix(sex))
+	PEER_setCovariates(model,as.matrix(covs))
 	
 	# Expression must be in NxG. N number of samples, G number of genes
 	PEER_setPhenoMean(model,t(expression))
