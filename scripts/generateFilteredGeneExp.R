@@ -110,10 +110,12 @@ males <- phen[phen$Race=="Caucasian", ]$Sex == "Male"
 females <- phen[phen$Race=="Caucasian", ]$Sex == "Female"
 #females=colnames(normalized2)[colnames(normalized2)%in%as.character(phen[phen$Sex%in%"Female","ImmVarID2"])]
 
-dM <- density(log2(exprs(normalized2)[,males]))
+expr.log <- log2(exprs(normalized2))
+
+dM <- density(expr.log[,males])
 min_males=optimize(approxfun(dM$x,dM$y),interval=c(3,4))$minimum
 
-dF <- density(log2(exprs(normalized2)[,females]))
+dF <- density(expr.log[,females])
 min_females=optimize(approxfun(dF$x,dF$y),interval=c(3,4))$minimum
 
 if (F) {
@@ -134,16 +136,17 @@ legend("topright",legend=paste(c("min f(x) = ",min_females,collapse="")))
 dev.off()
 }
 
-median_genexp_females_probes=apply(log2(exprs(normalized2)[,females]),1,median)
-median_genexp_males_probes=apply(log2(exprs(normalized2)[,males]),1,median)
+median_genexp_females_probes=apply(expr.log[,females],1,median)
+median_genexp_males_probes=apply(expr.log[,males],1,median)
 
 ###  Filter Y-linked non-PAR probes for which median expression in females is above threshold and distribution of expressions in male and females are equal (wilxon test pval > 10-5)
 
+# Should convert this loop to apply as well
 filt_Y_probe_exp=vector()
 for (gene in unique(as.character(merge_probes_DF_filt[merge_probes_DF_filt$gene_ensembl%in%Y.all[!Y.all%in%par.genes],"gene_ensembl"]))) {
 	probes=as.character(merge_probes_DF_filt[grep(gene,merge_probes_DF_filt$gene_ensembl),"probeId"]);
 	for (probe in probes) {
-                pval=wilcox.test(log2(exprs(normalized2)[probe,females]),log2(exprs(normalized2)[probe,males]))$p.value
+                pval=wilcox.test(expr.log[probe,females],expr.log[probe,males])$p.value
 		if (pval > 0.00001 && median_genexp_females_probes[probe] > min_females) {
 			filt_Y_probe_exp=c(filt_Y_probe_exp, probe)
 		}
